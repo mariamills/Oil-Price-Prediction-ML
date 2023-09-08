@@ -11,7 +11,6 @@ app = Flask(__name__)
 df = pd.read_csv('data/macro_features_and_real_oil_prices_log_tranferred_dropped_Nan_skipped_neg_and_zeros_for_log.csv',
                  skiprows=1)
 
-
 @app.route('/')
 def index():
     return render_template('index.html')
