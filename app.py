@@ -85,7 +85,6 @@ def plot():
     return jsonify({'plot_url': 'data:image/png;base64,{}'.format(plot_url),
                     'legend_url': 'data:image/png;base64,{}'.format(legend_url)})
 
-
 @app.route('/data_explorer')
 def data_explorer():
     return render_template('data_explorer.html')

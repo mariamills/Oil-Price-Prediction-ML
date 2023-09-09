@@ -80,6 +80,7 @@ fetch('/get_features')
                 .then(response => response.json())
                 .then(data => {
                     document.getElementById('plot').src = data.plot_url;
+                    document.getElementById('legend').src = data.legend_url;
                 });
             });
         });
