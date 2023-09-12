@@ -3,6 +3,8 @@ const mobileMenu = document.getElementById("mobile-menu");
 // Get the mobile menu button by its aria-controls attribute
 const mobileMenuButton = document.querySelector("[aria-controls='mobile-menu']");
 
+const plotType = document.getElementById("plot-type");
+
 // Listen for click events on the mobile menu button
 mobileMenuButton.addEventListener("click", function() {
     // Toggle the visibility of the mobile menu
@@ -70,12 +72,12 @@ fetch('/get_features')
             checkbox.addEventListener('change', () => {
                 console.log("Checkbox changed");  // Debugging line
                 const selected_features = getSelectedFeatures();
-                fetch('/get_plot', {  // Ensure the endpoint matches what you've defined in Flask
+                fetch('/get_plot', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ selected_features: selected_features }),
+                    body: JSON.stringify({ selected_features: selected_features, plot_type: plotType.value }),
                 })
                 .then(response => response.json())
                 .then(data => {
@@ -86,6 +88,34 @@ fetch('/get_features')
         });
     });
 
+// Plot type selection
+plotType.addEventListener('change', () => {
+    console.log("Plot type changed");  // Debugging line
+    const selected_features = getSelectedFeatures();
+    fetch('/get_plot', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ selected_features: selected_features, plot_type: plotType.value }),
+    })
+    .then(response => {
+        if (response.ok) {
+            return response.json();
+        } else {
+            throw new Error("Failed to fetch plot");
+        }
+    })
+    .then(data => {
+        document.getElementById('plot').src = data.plot_url;
+        document.getElementById('legend').src = data.legend_url;
+    })
+    .catch(error => {
+        console.error("Error fetching plot:", error);
+    });
+});
+
+
 function fetchAndPlotData() {
     const selected_features = getSelectedFeatures();
     fetch('/get_plot', {
@@ -93,7 +123,7 @@ function fetchAndPlotData() {
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ selected_features: selected_features }),
+        body: JSON.stringify({ selected_features: selected_features, plot_type: plotType.value }),
     })
     .then(response => response.json())
     .then(data => {

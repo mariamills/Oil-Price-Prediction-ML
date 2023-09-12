@@ -7,6 +7,7 @@
     <script defer src="/static/js/script.js"></script>
 </head>
 <body>
+{% block header %}
     <header>
         <!-- Navigation bar -->
         <nav class="bg-gray-800">
@@ -72,12 +73,10 @@
           </div>
         </nav>
     </header>
+    {% endblock %}
 
-    <main>
-        {% block content %}
-        {% endblock %}
-    </main>
-
+    {% block content %}
+    {% endblock %}
     <footer class="bg-white mt-6">
       <div class="mx-auto max-w-7xl px-6 py-12 md:flex md:items-center md:justify-between lg:px-8">
         <div class="flex justify-center space-x-6 md:order-2">

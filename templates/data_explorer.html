@@ -1,14 +1,95 @@
 {% extends "layout.html" %}
-{% block content %}
+{% block header %}
+    <!-- Override the default layout to add a custom header -->
+    <header>
+        <!-- Navigation bar -->
+        <nav class="bg-gray-800">
+          <div class="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
+            <div class="relative flex h-16 items-center justify-between">
+              <div class="absolute inset-y-0 left-0 flex items-center sm:hidden">
+                <!-- Mobile menu button-->
+                <button type="button" class="relative inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white" aria-controls="mobile-menu" aria-expanded="false">
+                  <span class="absolute -inset-0.5"></span>
+                  <span class="sr-only">Open main menu</span>
+                  <!--
+                    Icon when menu is closed.
+
+                    Menu open: "hidden", Menu closed: "block"
+                  -->
+                  <svg class="block h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                  </svg>
+                  <!--
+                    Icon when menu is open.
+
+                    Menu open: "block", Menu closed: "hidden"
+                  -->
+                  <svg class="hidden h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <div class="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
+                <div class="flex flex-shrink-0 items-center">
+                  <img class="h-8 w-auto logo" src="/assets/logo.svg" alt="">
+                </div>
+                <div class="hidden sm:ml-6 sm:block">
+                  <div class="flex space-x-4">
+                    <!-- Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-gray-700 hover:text-white" -->
+                    <a href="/" class="bg-gray-900 text-white rounded-md px-3 py-2 text-sm font-medium" aria-current="page">Home</a>
+                    <a href="#usage" class="text-gray-300 hover:bg-gray-700 hover:text-white rounded-md px-3 py-2 text-sm font-medium">Usage</a>
+                    <a href="#explore" class="text-gray-300 hover:bg-gray-700 hover:text-white rounded-md px-3 py-2 text-sm font-medium">Explore</a>
+                    <a href="#faq" class="text-gray-300 hover:bg-gray-700 hover:text-white rounded-md px-3 py-2 text-sm font-medium">Notes</a>
+                  </div>
+                </div>
+              </div>
+              <div class="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
+                <button type="button" class="relative rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
+                  <span class="absolute -inset-1.5"></span>
+                  <span class="sr-only">View notifications</span>
+                  <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          <!-- Mobile menu, show/hide based on menu state. -->
+          <div class="sm:hidden" id="mobile-menu">
+            <div class="space-y-1 px-2 pb-3 pt-2">
+              <!-- Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-gray-700 hover:text-white" -->
+              <a href="#" class="bg-gray-900 text-white block rounded-md px-3 py-2 text-base font-medium" aria-current="page">Home</a>
+              <a href="#usage" class="text-gray-300 hover:bg-gray-700 hover:text-white block rounded-md px-3 py-2 text-base font-medium">Usage</a>
+              <a href="#explore" class="text-gray-300 hover:bg-gray-700 hover:text-white block rounded-md px-3 py-2 text-base font-medium">Explore</a>
+              <a href="#faq" class="text-gray-300 hover:bg-gray-700 hover:text-white block rounded-md px-3 py-2 text-base font-medium">Notes</a>
+            </div>
+          </div>
+        </nav>
+    </header>
+    {% endblock %}
+
+    {% block content %}
+    <main>
         <div class="bg-white mt-6">
               <div class="relative isolate px-6 lg:px-8">
                 <div class="flex flex-col items-center justify-center h-screen">
                   <div class="text-center">
-                    <h2 class="text-4xl font-bold tracking-tight text-gray-900">Data Explorer</h2>
-                    <p class="mt-6 text-lg leading-8 text-gray-600">The oval table's school project where we dabble in predicting oil prices and using machine learning.</p>
+                      <h2 class="text-4xl font-bold tracking-tight text-gray-900">Welcome to the Data Exploration Page</h2>
+                      <h5 class="my-6">📈 What is this page about?</h5>
+                      <p class="mt-2 text-lg leading-8 text-gray-600 w-1/2 mx-auto">This page is designed to allow you to explore how various our data's features affect our data's oil prices. Using the dropdown menus, you can select different features and view them plotted against real oil prices. This enables us and you to visually understand the relationship between these factors and oil prices.</p>
                   </div>
 
-                    <div class="flex flex-col items-center justify-center h-screen">
+                  <!--  Info page -->
+                    <div class="my-8" id="usage">
+                        <div class="text-center">
+                            <h5 class="">🛠️ How to Use</h5>
+                            <p class="mt-2 text-lg leading-8 text-gray-600 w-1/2 mx-auto">This page is designed to allow you to explore how various our data's features affect our data's oil prices. Using the dropdown menus, you can select different features and view them plotted against real oil prices. This enables us and you to visually understand the relationship between these factors and oil prices.</p>
+                            <p class="text-lg leading-8 text-gray-600 w-1/2 mx-auto mt-4">⚠️<strong>Important Note</strong>: While this tool allows you to select multiple features, please be cautious. Selecting too many features at once can make the graph difficult to read. <strong>We are working on enhancing this functionality, but for the best experience, we recommend choosing only a few features at a time</strong>.</p>
+                        </div>
+                    </div>
+
+                    <!-- Explore -->
+                    <div class="flex flex-col items-center justify-center h-screen" id="explore">
                         <button onclick="featureToggle()" class="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Feature List</button>
 
                         <!-- Container for checkboxes -->
@@ -26,17 +107,27 @@
                         </div>
 
                         <div class="mt-10 flex items-center justify-center gap-x-6">
+                            <select id="plot-type">
+                              <option value="line">Line Plot</option>
+                              <option value="scatter">Scatter Plot</option>
+                            </select>
+
                             <!-- Button to fetch and plot data -->
                             <button onclick="fetchAndPlotData()" class="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Plot</button>
                         </div>
                     </div>
-
                     <!-- Container for the plot and legend -->
                     <div class="">
                         <img id="plot" src="" class="" alt="Plot will appear here" />
                         <img id="legend" src="" class="" alt="Legend will appear here" />
                     </div>
+
+                     <!--  Misc -->
+                    <div class="my-8" id="faq">
+
+                    </div>
                 </div>
               </div>
             </div>
+    </main>
     {% endblock %}

@@ -32,12 +32,13 @@ def get_data():
 
 
 # Fetch Data and Plot
-# Fetch Data and Plot
 @app.route('/get_plot', methods=['POST'])
 def plot():
+    print(request.json) # for debugging
     selected_features = request.json['selected_features']
+    plot_type = request.json['plot_type']  # to specify the type of plot
 
-    # Check for NaNs and infinities (keeping this part the same)
+    # Check for NaNs and infinities (keeping this part the same for now)
     if df.isnull().values.any() or df.isin([np.inf, -np.inf]).values.any():
         return jsonify({"error": "DataFrame contains NaN or Inf values"}), 400
 
@@ -51,12 +52,29 @@ def plot():
     handles = []
     for feature in selected_features:
         if feature in df.columns:
-            line, = ax.plot(df[feature], df['Real Oil Prices'], label=feature)
-            handles.append(line)
+            if plot_type == 'line':
+                # Line Plot
+                line, = ax.plot(df[feature], df['Real Oil Prices'], label=feature, linewidth=2, linestyle='--', marker='o', markersize=3, alpha=0.7)
+                ax.plot(df[feature].iloc[0], df['Real Oil Prices'].iloc[0], color='green', label=f"{feature} (Start)", marker='o', markersize=5, zorder=5)
+                ax.plot(df[feature].iloc[-1], df['Real Oil Prices'].iloc[-1], color='red', label=f"{feature} (End)", marker='o', markersize=5, zorder=5)
+                handles.append(line)
+            elif plot_type == 'scatter':
+                # Create a scatter plot
+                scatter = ax.scatter(df[feature], df['Real Oil Prices'], label=f"{feature} (Others)", alpha=0.7, s=10)
+
+                # Highlight the first and last point for each feature
+                ax.scatter(df[feature].iloc[0], df['Real Oil Prices'].iloc[0], color='green', label=f"{feature} (Start)",
+                           zorder=5)
+                ax.scatter(df[feature].iloc[-1], df['Real Oil Prices'].iloc[-1], color='red', label=f"{feature} (End)",
+                           zorder=5)
+                handles.append(scatter)
 
     ax.set_xlabel('Features')
     ax.set_ylabel('Real Oil Prices')
     ax.set_title('Real Oil Prices vs. Features')
+    # Grid Lines
+    ax.grid(True, which='both', linestyle='--', linewidth=0.5)
+
 
     # Save just the plot (no legend) to a BytesIO object
     img_plot = BytesIO()
