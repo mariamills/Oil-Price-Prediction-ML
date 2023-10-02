@@ -107,6 +107,10 @@ def plot():
 def data_explorer():
     return render_template('data_explorer.html')
 
+@app.route('/predict')
+def predict():
+    return render_template('predict.html')
+
 
 if __name__ == '__main__':
     app.run()
