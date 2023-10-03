@@ -8,8 +8,9 @@ from flask import Flask, render_template, jsonify, request
 app = Flask(__name__)
 
 # Load Data from CSV when app is launched
-df = pd.read_csv('data/macro_features_and_real_oil_prices_log_tranferred_dropped_Nan_skipped_neg_and_zeros_for_log.csv',
-                 skiprows=1)
+df = pd.read_csv(
+    'data/macro_features_and_real_oil_prices_log_tranferred_dropped_Nan_skipped_neg_and_zeros_for_log.csv',
+    skiprows=1)
 
 @app.route('/')
 def index():
