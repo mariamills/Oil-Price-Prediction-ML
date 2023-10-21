@@ -18,14 +18,14 @@ def index():
 
 
 # Feature Names Endpoint to get feature names for dropdown menu
-@app.route('/get_features', methods=['GET'])
+@app.route('/features', methods=['GET'])
 def get_features():
     feature_names = df.columns.tolist()[2:-1]
     return jsonify(feature_names)
 
 
 # Data Endpoint to filter DataFrame based on selected features
-@app.route('/get_data', methods=['POST'])
+@app.route('/data', methods=['POST'])
 def get_data():
     selected_features = request.json['selected_features']
     filtered_df = df[selected_features]
@@ -33,7 +33,7 @@ def get_data():
 
 
 # Fetch Data and Plot
-@app.route('/get_plot', methods=['POST'])
+@app.route('/plot', methods=['POST'])
 def plot():
     print(request.json) # for debugging
     selected_features = request.json['selected_features']

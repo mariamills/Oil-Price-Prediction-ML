@@ -29,7 +29,7 @@ function getSelectedFeatures() {
 }
 
 // Add checkboxes for feature selection
-fetch('/get_features')
+fetch('/features')
     .then(response => response.json())
     .then(data => {
         // Create a checkbox for each feature
@@ -76,7 +76,7 @@ fetch('/get_features')
             checkbox.addEventListener('change', () => {
                 console.log("Checkbox changed");  // Debugging line
                 const selected_features = getSelectedFeatures();
-                fetch('/get_plot', {
+                fetch('/plot', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -97,7 +97,7 @@ if (plotType) {
     plotType.addEventListener('change', () => {
         console.log("Plot type changed");  // Debugging line
         const selected_features = getSelectedFeatures();
-        fetch('/get_plot', {
+        fetch('/plot', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -124,7 +124,7 @@ if (plotType) {
 
 function fetchAndPlotData() {
     const selected_features = getSelectedFeatures();
-    fetch('/get_plot', {
+    fetch('/plot', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
