@@ -31,7 +31,7 @@ If you're interested in a deeper understanding of our project—including challe
 Retrieves a list of all features that can be used for data visualization and filtering.
 
 ```http
-  GET /get_features
+  GET /features
 ```
 
 | Parameter | Type     | Description                |
