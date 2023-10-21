@@ -3,7 +3,7 @@ def test_get_plot(client):
         "selected_features": ["RPI"],
         "plot_type": "line"
     }
-    response = client.post('/get_plot', json=payload)
+    response = client.post('/plot', json=payload)
     data = response.get_json()
     assert response.status_code == 200
     assert "data:image/png;base64," in data["plot_url"]

@@ -11,5 +11,5 @@ def test_predict(client):
     assert response.status_code == 200
 
 def test_get_features(client):
-    response = client.get('/get_features')
+    response = client.get('/features')
     assert response.status_code == 200

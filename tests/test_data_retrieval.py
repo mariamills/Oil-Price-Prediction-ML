@@ -1,5 +1,5 @@
 def test_get_features_data(client):
-    response = client.get('/get_features')
+    response = client.get('/features')
     data = response.get_json()
     assert isinstance(data, list)
     assert "RPI" in data
