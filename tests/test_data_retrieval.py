@@ -9,7 +9,7 @@ def test_get_data_success(client):
         "selected_features": ["RPI"]
     }
 
-    response = client.post("/get_data", json=payload)
+    response = client.post("/data", json=payload)
 
     assert response.status_code == 200
 
