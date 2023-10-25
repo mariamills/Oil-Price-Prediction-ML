@@ -10,7 +10,7 @@ This web interface is a crucial component of the larger __Oil Price Prediction P
 
 If you're interested in a deeper understanding of our project—including challenges faced, solutions implemented, and technical details—we encourage you to visit the comprehensive documentation linked below.
 
-[Project Documentation](https://linktodocumentation)
+[Full Project Documentation]([https://linktodocumentation](https://mariamills.github.io/Oil-Price-Prediction/))
 
 
 ## Features
