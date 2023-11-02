@@ -75,17 +75,30 @@
                       <h2 class="text-4xl font-bold tracking-tight text-gray-900">Prediction Page</h2>
                       <h5 class="my-6">❓ What is this page?</h5>
                       <p class="mt-2 text-lg leading-8 text-gray-600 w-1/2 mx-auto">This page is where the magic happens, choose what model you'd like to use and predict away.</p>
-                      <p><strong>We have not yet implemented Time Series Models, so this page currently does not work.</strong></p>
+                      <p><strong>We have not yet implemented Time Series Models. This page is still a WIP!</strong></p>
                   </div>
 
                     <!-- Predict -->
                     <div class="">
-                        <div class="text-center">
-
+                        <div class="text-center" id="prediction-result">
+                            <p id="mse"></p>
+                            <p id="mae"></p>
+                            <p id="rmse"></p>
+                        </div>
+                        <div id="actual-vs-predicted-plot">
+                            <!-- Loading Indicator -->
+{#                            <img src="{{ url_for('static', filename='assets/loading.gif') }}" alt="Loading..." id="loading">#}
+                            <!-- Actual vs Predicted Plot -->
+                            <img src="" alt="Actual vs Predicted" id="actual-vs-predicted" class="hidden">
+                        </div>
+                        <div id="feature-importance-plot">
+                            <!-- Feature Importance Plot -->
+                            <img src="" alt="Feature Importance" id="feature-importance" class="hidden">
                         </div>
                     </div>
 
-                    <!-- Container for the model selection -->
+
+                    <!-- Container for the models selection -->
                     <div class="mt-10 flex items-center justify-center gap-x-6">
                         <select id="model-type">
                             <option value="1">Random Forest</option>

@@ -151,16 +151,70 @@ function uncheckAllFeatures() {
     });
 }
 
+function displayResults(data) {
+    document.getElementById('mse').textContent = data.mse;
+    document.getElementById('mae').textContent = data.mae;
+    document.getElementById('rmse').textContent = data.rmse;
+
+    let actualVsPredictedPlotImg = document.getElementById('actual-vs-predicted-plot');
+    actualVsPredictedPlotImg.src = data.actual_vs_predicted_plot;
+
+    let featureImportancePlotImg = document.getElementById('feature-importance-plot');
+    featureImportancePlotImg.src = data.feature_importance_plot;
+}
+
+// Predict
+// Predict
+function predict() {
+    console.log("PREDICTING!!");
+    const modelType = document.getElementById('model-type').value;
+    const selectedFeatures = getSelectedFeatures();  // get selected features using your existing function
+    console.log("Selected features:", selectedFeatures);  // Debugging line
+
+    // Prepare data to send to the server
+    const data = {
+        model_type: modelType,
+        selected_features: selectedFeatures  // include selected features in data
+    };
+
+    // Send a POST request to the server to get the prediction
+    fetch('/predict_model', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+    })
+    .then(response => {
+        if (response.ok) {
+            return response.json();
+        } else {
+            throw new Error("Failed to fetch prediction");
+        }
+    })
+    .then(data => {
+        console.log('Success:', data);
+        document.getElementById('mse').textContent = 'MSE: ' + data.mse;
+        document.getElementById('mae').textContent = 'MAE: ' + data.mae;
+        document.getElementById('rmse').textContent = 'RMSE: ' + data.rmse;
+        document.getElementById('actual-vs-predicted').src = data.actual_vs_predicted_plot;
+        document.getElementById('feature-importance').src = data.feature_importance_plot;
+        // Hide loading indicator and show the plots
+        // document.getElementById('loading').classList.add('hidden');
+        document.getElementById('actual-vs-predicted').classList.remove('hidden');
+        document.getElementById('feature-importance').classList.remove('hidden');
+    })
+    .catch(error => {
+        console.error("Error fetching prediction:", error);
+    });
+}
+
+
 // Check all checkboxes
 function checkAllFeatures() {
     document.querySelectorAll('input[name="feature"]').forEach((checkbox) => {
         checkbox.checked = true;
     });
-}
-
-// Predict
-function predict() {
-    console.log("PREDICTING!!")
 }
 
 
