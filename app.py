@@ -5,31 +5,70 @@ import base64
 from io import BytesIO
 from flask import Flask, render_template, jsonify, request, url_for
 import joblib
-from sklearn.metrics import mean_squared_error, mean_absolute_error
+from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+import statsmodels
 
 app = Flask(__name__)
 
-# Load models into memory on app startup
-models = {
-    'random_forest': joblib.load('models/random_forest/random_forest_model.pkl'),
-    # ... load other models ...
+NUM_FEATURES = 10  # Number of features to show in feature importance plot
+
+# Load models and their corresponding datasets into memory on app startup
+model_data = {
+    'random_forest': {
+        'model': joblib.load('models/random_forest/random_forest_model.pkl'),
+        'data': 'data/random_forest/RF_Combined_Log_Clean_NoNeg.csv',
+        'is_time_series': False
+    },
+    'arima': {
+            'model': joblib.load('models/arima/arima_model.pkl'),
+            'data': 'data/Combined_Log_Transformed.csv',
+            'is_time_series': True
+    },
 }
 
-# Load Data from CSV when app is launched
-df = pd.read_csv(
-    'data/macro_features_and_real_oil_prices_log_tranferred_dropped_Nan_50_neg_and_zeros_for_log.csv',
-    skiprows=0)
+def load_model(model_name):
+    return model_data[model_name]['model']
 
+
+def get_model_data(model_name):
+    return model_data[model_name]['data']
+
+
+def load_data_for_model(model_type):
+    if model_type not in model_data:
+        raise ValueError(f"No model found for type: {model_type}")
+    data_path = get_model_data(model_type)
+    return pd.read_csv(data_path)
+
+
+# Load Data from CSV when app is launched
+#df = pd.read_csv('data/Combined_Log_Excl_Roil_Clean.csv',skiprows=0, usecols=lambda x: x != 'date')
 
 @app.route('/')
 def index():
     return render_template('index.html')
 
 
-# Feature Names Endpoint to get feature names for dropdown menu
-@app.route('/features', methods=['GET'])
+# TODO: THIS NEEDS TO BE DYANMICALLY LOADED BASED ON THE MODEL SELECTED
+# Feature Names Endpoint to get feature names for chosen model
+@app.route('/features', methods=['GET', 'POST'])
 def get_features():
-    feature_names = df.columns.tolist()[0:-1]
+    #if request.method == 'POST':
+   # else:
+        # For GET requests, set a default model or handle it differently
+    #    model_type = 'random_forest'  # Set your default model here
+
+    model_type = request.json.get('model', 'random_forest')
+
+    if model_type not in model_data:
+        return jsonify({'error': f"No model found for type: {model_type}"}), 400
+
+    data = load_data_for_model(model_type)  # Load the data into a DataFrame
+
+    print(f"Features for model type: {model_type}, data: {data.columns.tolist()}")
+
+    # Fetch feature names from the model-specific data
+    feature_names = data.columns.tolist()[0:-1]  # remove the last column (target)
     return jsonify(feature_names)
 
 
@@ -37,6 +76,11 @@ def get_features():
 @app.route('/data', methods=['POST'])
 def get_data():
     selected_features = request.json['selected_features']
+    model_type = request.json['model_type', 'random_forest']  # get the model type, default to random forest
+
+    data_path = get_model_data(model_type)
+    df = pd.read_csv(data_path)  # Load the data into a DataFrame
+
     filtered_df = df[selected_features]
     return jsonify(filtered_df.to_dict(orient='list'))
 
@@ -47,12 +91,17 @@ def plot():
     print(request.json)  # for debugging
     selected_features = request.json['selected_features']
     plot_type = request.json['plot_type']  # to specify the type of plot
+    model_type = request.json.get('model_type', 'random_forest')
+
+    data_path = get_model_data(model_type)
+    df = pd.read_csv(data_path)  # Load the data dynamically
 
     # Check for NaNs and infinities (keeping this part the same for now)
     if df.isnull().values.any() or df.isin([np.inf, -np.inf]).values.any():
         return jsonify({"error": "DataFrame contains NaN or Inf values"}), 400
 
-    if 'Real Oil Prices' not in df.columns:
+    target_name = 'Real Oil Prices' or 'Cushing, OK WTI Spot Price FOB (Dollars per Barrel)'
+    if target_name not in df.columns:
         return jsonify({"error": "'Real Oil Prices' not found in DataFrame"}), 400
 
     # Create the plot and set its size
@@ -124,75 +173,115 @@ def data_explorer():
 
 @app.route('/predict')
 def predict():
-    return render_template('predict.html')
+    # Send the default dataset (or based on a default model) to the Predict page
+    default_model = 'random_forest'  # Example default model
+    default_data_path = get_model_data(default_model)
+    default_data = pd.read_csv(default_data_path)  # Load the data into a DataFrame
+    feature_names = default_data.columns.tolist()[0:-1]
+    return render_template('predict.html', feature_names=feature_names)
 
-@app.route('/predict_model', methods=['POST'])
-def predict_model():
+
+@app.route('/update_features', methods=['POST'])
+def update_features():
+    model_type = request.json['model_type']
+    if model_type not in model_data:
+        return jsonify({'error': f"No model found for type: {model_type}"}), 400
+
+    data_path = get_model_data(model_type)
+    df = pd.read_csv(data_path)  # Load the data into a DataFrame
+    feature_names = df.columns.tolist()[0:-1]
+    return jsonify(feature_names)
+
+
+def calculate_metrics(true_values, prediction):
+    mse = mean_squared_error(true_values, prediction)
+    mae = mean_absolute_error(true_values, prediction)
+    rmse = np.sqrt(mse)
+    mape = np.mean(np.abs((true_values - prediction) / true_values)) * 100
+    r2 = r2_score(true_values, prediction)
+    return mse, mae, rmse, mape, r2
+
+@app.route('/evaluate', methods=['POST'])
+def evaluate():
     try:
-        model_type = request.get_json().get('model_type').lower()  # get model type from request
-        model_type_dict = {"1": "random_forest", "2": "xgboost", "3": "polynomial_regression"}
-        model_name = model_type_dict.get(model_type)
-        if model_name is None:
-            raise ValueError(f"No model found for type: {model_type}")
-        model_file = f'models/{model_name}/{model_name}_model.pkl'
-        model = joblib.load(model_file)
+        model_type = request.get_json().get('model_type').lower()
 
-        selected_features = get_features_names()  # Get the selected features using your existing function
-        print("SELECTED:", selected_features)
+        if model_type not in model_data:
+            raise ValueError(f"No model found for type: {model_type}")
+
+        model = load_model(model_type)
+        data_path = get_model_data(model_type)
+        data = pd.read_csv(data_path)  # Load the data into a DataFrame
+
+        print(f"Evaluating Model type: {model_type}, data: {data_path}")
+
+        request_data = request.get_json()
+        selected_features = request_data.get('selected_features')
         if not selected_features:
             raise ValueError("No features selected")
 
-        data = df[selected_features]  # filter DataFrame using selected features
-        if data.empty:
+        filtered_data = data[selected_features]
+        if filtered_data.empty:
             raise ValueError("No data available for selected features")
 
-        # Assuming you have true values in a variable named true_values
-        true_values = df['Real Oil Prices']  # Replace 'Real Oil Prices' with the name of your target column
+        target_column = 'Real Oil Prices' if 'Real Oil Prices' in data.columns else 'Cushing, OK WTI Spot Price FOB (Dollars per Barrel)'
+        if target_column not in data.columns:
+            raise ValueError(f"'{target_column}' not found in DataFrame")
 
-        prediction = model.predict(data)
+        # Debugging: Print feature names
+        print("Features used for prediction:", selected_features)
+        print("Features used in training:", data.columns.tolist())
+
+        true_values = data[target_column]
+        prediction = model.predict(filtered_data)
 
         # Compute metrics
-        mse = mean_squared_error(true_values, prediction)
-        mae = mean_absolute_error(true_values, prediction)
-        rmse = np.sqrt(mse)
+        mse, mae, rmse, mape, r2 = calculate_metrics(true_values, prediction)
 
-        # Plotting actual vs predicted
-        plt.figure(figsize=(10, 6))
-        plt.plot(prediction, label='Predictions', color='blue')
-        plt.plot(true_values.values, label='Actual', color='red')
-        plt.plot([0, len(true_values)], [np.mean(prediction), np.mean(prediction)], '--', lw=2, color='green', label='Mean Prediction')
-        plt.legend(loc='upper left')
-        plt.xlabel('Index')
-        plt.ylabel('Value')
-        plt.title('Actual vs Predicted')
-        actual_vs_predicted_plot_file = 'static/plots/actual-vs-predicted-plot.png'
-        plt.savefig(actual_vs_predicted_plot_file)
-        plt.close()
+        if model_type == 'random_forest':
+            # Plotting actual vs predicted
+            plt.figure(figsize=(10, 6))
+            plt.plot(prediction, label='Predictions', color='blue')
+            plt.plot(true_values.values, label='Actual', color='red')
+            plt.plot([0, len(true_values)], [np.mean(prediction), np.mean(prediction)], '--', lw=2, color='green', label='Mean Prediction')
+            plt.legend(loc='upper left')
+            plt.xlabel('Index')
+            plt.ylabel('Value')
+            plt.title('Actual vs Predicted')
+            actual_vs_predicted_plot_file = 'static/plots/actual-vs-predicted-plot.png'
+            plt.savefig(actual_vs_predicted_plot_file)
+            plt.close()
 
-        # Feature Importance
-        importances = model.feature_importances_
-        indices = np.argsort(importances)[-10:]  # Get the indices of the top 10 features
-        plt.figure()
-        plt.title('Feature Importances')
-        plt.barh(range(len(indices)), importances[indices], align='center')
-        plt.yticks(range(len(indices)), [selected_features[i] for i in indices])
-        plt.xlabel('Relative Importance')
-        feature_importance_plot_file = 'static/plots/feature-importance-plot.png'
-        plt.savefig(feature_importance_plot_file)
-        plt.close()
+            # Feature Importance
+            importances = model.feature_importances_
+            indices = np.argsort(importances)[-NUM_FEATURES:]  # Get the indices of the top NUM_FEATURES features
+            plt.figure()
+            plt.title('Feature Importances')
+            plt.barh(range(len(indices)), importances[indices], align='center')
+            plt.yticks(range(len(indices)), [selected_features[i] for i in indices])
+            plt.xlabel('Relative Importance')
+            feature_importance_plot_file = 'static/plots/feature-importance-plot.png'
+            plt.savefig(feature_importance_plot_file)
+            plt.close()
+
 
         result = {
             'mse': mse,
             'mae': mae,
             'rmse': rmse,
+            'mape': mape,
+            'r2': r2,
             'actual_vs_predicted_plot': url_for('static', filename='plots/actual-vs-predicted-plot.png'),
             'feature_importance_plot': url_for('static', filename='plots/feature-importance-plot.png'),
-            'prediction': prediction.tolist()  # Keeping the raw prediction values in case they are needed
+            'prediction': prediction.tolist(),  # Keeping the raw prediction values in case they are needed,
         }
+
 
     except ValueError as e:
         print(f'Value error: {e}')
         return jsonify({'error': str(e)}), 400
+
+
     except Exception as e:
         print('Error while predicting:', str(e))
         return jsonify({'error': 'Error while predicting'}), 400
@@ -200,9 +289,13 @@ def predict_model():
     return jsonify(result)
 
 
-def get_features_names():
-    feature_names = df.columns.tolist()[0:-1]
-    return feature_names # return list of feature names
+def get_features_names(model_type):
+    model = load_model(model_type)
+    data_path = get_model_data(model_type)
+    data = pd.read_csv(data_path)  # Load the data into a DataFrame
+
+    feature_names = data.columns.tolist()[0:-1]  # Use 'data' instead of 'df'
+    return feature_names  # Return list of feature names
 
 
 if __name__ == '__main__':

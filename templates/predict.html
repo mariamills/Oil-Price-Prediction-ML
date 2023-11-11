@@ -68,49 +68,61 @@
 
     {% block content %}
     <main>
-        <div class="bg-white mt-6">
+        <div class="bg-white mt-6 text-center">
               <div class="relative isolate px-6 lg:px-8">
                 <div class="flex flex-col items-center justify-center h-screen">
                   <div class="text-center">
                       <h2 class="text-4xl font-bold tracking-tight text-gray-900">Prediction Page</h2>
                       <h5 class="my-6">❓ What is this page?</h5>
                       <p class="mt-2 text-lg leading-8 text-gray-600 w-1/2 mx-auto">This page is where the magic happens, choose what model you'd like to use and predict away.</p>
-                      <p><strong>We have not yet implemented Time Series Models. This page is still a WIP!</strong></p>
+                      <p><strong>This page is still a WIP!</strong></p>
                   </div>
 
-                    <!-- Predict -->
-                    <div class="">
-                        <div class="text-center" id="prediction-result">
-                            <p id="mse"></p>
-                            <p id="mae"></p>
-                            <p id="rmse"></p>
-                        </div>
-                        <div id="actual-vs-predicted-plot">
-                            <!-- Loading Indicator -->
-{#                            <img src="{{ url_for('static', filename='assets/loading.gif') }}" alt="Loading..." id="loading">#}
-                            <!-- Actual vs Predicted Plot -->
-                            <img src="" alt="Actual vs Predicted" id="actual-vs-predicted" class="hidden">
-                        </div>
-                        <div id="feature-importance-plot">
-                            <!-- Feature Importance Plot -->
-                            <img src="" alt="Feature Importance" id="feature-importance" class="hidden">
-                        </div>
-                    </div>
-
-
-                    <!-- Container for the models selection -->
+                   <!-- Container for the models selection -->
                     <div class="mt-10 flex items-center justify-center gap-x-6">
-                        <select id="model-type">
-                            <option value="1">Random Forest</option>
-                            <option value="2">XGBoost</option>
-                            <option value="3">Polynomial Regression</option>
+                        <label for="model-type">Model Selection</label>
+                        <select
+                            id="model-type"
+                            name="model-type"
+                            class="mt-2 block w-full rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                        >
+                            <option value="naive_forecast">Naive Forecast</option>
+                            <option value="random_forest">Random Forest</option>
+                            <option value="xgboost">XGBoost [Regression]</option>
+                            <option value="polynomial_Regression">Polynomial Regression</option>
+                            <option value="arima">ARIMA</option>
+                            <option value="prophet">Prophet</option>
+                            <option value="xgboost_time_series">XGBoost [Time Series]</option>
                         </select>
 
                    <!--     Magic button    -->
                         <button onclick="predict()" class="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Predict</button>
                     </div>
 
-                     <!--  Misc -->
+                    <!-- Predict -->
+                    <div class="">
+                        <div class="" id="prediction-result">
+                            <p id="mse"></p>
+                            <p id="mae"></p>
+                            <p id="rmse"></p>
+                            <p id="mape"></p>
+                            <p id="r2"></p>
+                        </div>
+
+                        <div id="actual-vs-predicted-plot">
+                            <!-- Loading Indicator -->
+{#                            <img src="{{ url_for('static', filename='assets/loading.gif') }}" alt="Loading..." id="loading">#}
+
+                            <!-- Actual vs Predicted Plot -->
+                            <img src="" alt="Actual vs Predicted" id="actual-vs-predicted" class="hidden img-fluid">
+                        </div>
+
+                        <div id="feature-importance-plot" class="">
+                            <!-- Feature Importance Plot -->
+                            <img src="" alt="Feature Importance" id="feature-importance" class="hidden img-fluid">
+                        </div>
+                    </div>
+                   <!--  Misc -->
                     <div class="my-8" id="faq">
 
                     </div>
