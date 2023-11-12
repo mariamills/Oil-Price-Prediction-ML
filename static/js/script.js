@@ -29,7 +29,7 @@ function getSelectedFeatures() {
     checkboxes.forEach((checkbox) => {
         selected.push(checkbox.value);
     });
-    console.log("Selected features:", selected);  // Debugging line
+    console.log(`Selected features ${selected}`);  // Debugging line
     return selected;
 }
 
@@ -42,7 +42,8 @@ function createFeatureCheckboxes(features) {
         return;
     }
 
-    checkboxContainer.innerHTML = ''; // Clear existing checkboxes
+    if (checkboxContainer) {
+        checkboxContainer.innerHTML = ''; // Clear existing checkboxes
     features.forEach(feature => {
         if (feature === 'date') {
             return; // Skip date feature
@@ -78,7 +79,8 @@ function createFeatureCheckboxes(features) {
         wrapper.appendChild(checkboxWrapper);
         wrapper.appendChild(labelWrapper);
         checkboxContainer.appendChild(wrapper);
-    });
+        });
+    }
     console.log('Checkboxes created for features:', features);  // Debugging line
 }
 
@@ -105,14 +107,8 @@ if (modelType) {
     modelType.addEventListener('change', () => {
         const model = modelType.value;
 
-        // Send POST request with model type
-        fetch('/features', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({model: model}),
-        })
+        // Send GET request to fetch features for the selected model
+        fetch(`/features?model=${model}`, )
         .then(response => {
             if (response.ok) {
                 return response.json();
@@ -123,7 +119,6 @@ if (modelType) {
         .then(data => {
             // Handle the fetched feature data
             console.log(`Features for ${model}:`, data);
-            // Update your UI with the new features here
         })
         .catch(error => {
             console.error('Error fetching features:', error);
@@ -134,9 +129,9 @@ if (modelType) {
 
 // When a new dataset is selected, fetch the new dataset's features and update the checkboxes
 if (dataDropdownSelection){
-    dataDropdownSelection.addEventListener('change', () => {
     const dataset = dataDropdownSelection.value;
 
+    dataDropdownSelection.addEventListener('change', () => {
     // Fetch new features based on the selected model
     fetch(`/features?data=${dataset}`)
         .then(response => response.json())
@@ -178,7 +173,6 @@ if (plotType) {
     });
 }
 
-
 function fetchAndPlotData() {
     const selected_features = getSelectedFeatures();
     fetch('/plot', {
@@ -210,20 +204,39 @@ function uncheckAllFeatures() {
 
 // Update the UI with model evaluation metrics
 function updateUIWithMetrics(data) {
+    console.log('Updating UI with metrics:', data);
     document.getElementById('mse').textContent = 'MSE: ' + data.mse;
     document.getElementById('mae').textContent = 'MAE: ' + data.mae;
     document.getElementById('rmse').textContent = 'RMSE: ' + data.rmse;
     document.getElementById('mape').textContent = 'MAPE: ' + data.mape;
     document.getElementById('r2').textContent = 'R2: ' + data.r2;
 
-    document.getElementById('actual-vs-predicted').src = data.actual_vs_predicted_plot;
-    document.getElementById('feature-importance').src = data.feature_importance_plot || 'Model does not support feature importance';
+    document.getElementById('actual-vs-predicted').src = data.actual_vs_predicted_plot || '';
+    document.getElementById('feature-importance').src = data.feature_importance_plot || '';
+    document.getElementById('future_forecast_plot').src = data.future_forecast_plot || '';
 
     // Hide loading indicator and show the plots
     // document.getElementById('loading').classList.add('hidden');
-    document.getElementById('actual-vs-predicted').classList.remove('hidden');
-    document.getElementById('feature-importance').classList.remove('hidden');
+
+    if(data.actual_vs_predicted_plot !== '') {
+        document.getElementById('actual-vs-predicted').classList.remove('hidden');
+    } else {
+        document.getElementById('actual-vs-predicted').classList.add('hidden');
+    }
+
+    if(data.feature_importance_plot !== '') {
+        document.getElementById('feature-importance').classList.remove('hidden');
+    } else {
+        document.getElementById('feature-importance').classList.add('hidden');
+    }
+
+    if(data.future_forecast_plot !== '') {
+        document.getElementById('future_forecast_plot').classList.remove('hidden');
+    } else {
+        document.getElementById('future_forecast_plot').classList.add('hidden');
+    }
 }
+
 
 // Predict
 function predict() {
@@ -231,14 +244,8 @@ function predict() {
     const model = modelType.value;
 
     // TODO: Show loading indicator
-    // TODO: Make this dynamic by fetching the features for the selected model
     // Fetch features first
-    fetch('/features', {
-        method: 'GET',  // Specify the method
-        headers: {
-            'Content-Type': 'application/json',
-        },
-    })
+    fetch(`/features?model=${model}`)
     .then(response => {
         if (!response.ok) {
             throw new Error("Failed to fetch features");
@@ -246,15 +253,15 @@ function predict() {
         return response.json();
     })
     .then(features => {
-        console.log("Selected features:", features);  // Debugging line
+        console.log(`Selected features ${features} for ${model}`);  // Debugging line
 
         // Prepare data to send to the server
         const data = {
-            model_type: model,
+            model: model,
             selected_features: features  // Use the fetched features
         };
 
-        // Send a POST request to the server to get the prediction
+        // Send a POST request to fetch the prediction
         return fetch('/evaluate', {
             method: 'POST',
             headers: {
@@ -271,13 +278,13 @@ function predict() {
     })
     .then(data => {
         console.log('Success:', data);
-        // Update UI with the received data
         updateUIWithMetrics(data);
     })
     .catch(error => {
         console.error("Error:", error);
     });
 }
+
 
 // Check all checkboxes
 function checkAllFeatures() {

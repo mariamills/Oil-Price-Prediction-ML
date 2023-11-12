@@ -20,11 +20,12 @@ model_data = {
         'is_time_series': False
     },
     'arima': {
-            'model': joblib.load('models/arima/arima_model.pkl'),
-            'data': 'data/Combined_Log_Transformed.csv',
-            'is_time_series': True
+        'model': joblib.load('models/arima/arima_model.pkl'),
+        'data': 'data/arima/diff_oil_prices_arima.csv',
+        'is_time_series': True
     },
 }
+
 
 def load_model(model_name):
     return model_data[model_name]['model']
@@ -42,7 +43,7 @@ def load_data_for_model(model_type):
 
 
 # Load Data from CSV when app is launched
-#df = pd.read_csv('data/Combined_Log_Excl_Roil_Clean.csv',skiprows=0, usecols=lambda x: x != 'date')
+# df = pd.read_csv('data/Combined_Log_Excl_Roil_Clean.csv',skiprows=0, usecols=lambda x: x != 'date')
 
 @app.route('/')
 def index():
@@ -51,14 +52,9 @@ def index():
 
 # TODO: THIS NEEDS TO BE DYANMICALLY LOADED BASED ON THE MODEL SELECTED
 # Feature Names Endpoint to get feature names for chosen model
-@app.route('/features', methods=['GET', 'POST'])
+@app.route('/features', methods=['GET'])
 def get_features():
-    #if request.method == 'POST':
-   # else:
-        # For GET requests, set a default model or handle it differently
-    #    model_type = 'random_forest'  # Set your default model here
-
-    model_type = request.json.get('model', 'random_forest')
+    model_type = request.args.get('model', 'random_forest')
 
     if model_type not in model_data:
         return jsonify({'error': f"No model found for type: {model_type}"}), 400
@@ -76,7 +72,8 @@ def get_features():
 @app.route('/data', methods=['POST'])
 def get_data():
     selected_features = request.json['selected_features']
-    model_type = request.json['model_type', 'random_forest']  # get the model type, default to random forest
+    # Correct way to get 'model_type' with a default value
+    model_type = request.json.get('model_type', 'random_forest')
 
     data_path = get_model_data(model_type)
     df = pd.read_csv(data_path)  # Load the data into a DataFrame
@@ -201,10 +198,14 @@ def calculate_metrics(true_values, prediction):
     r2 = r2_score(true_values, prediction)
     return mse, mae, rmse, mape, r2
 
+
+# Evaluate Endpoint
+# Making this a POST because we are sending the selected features in the request body which is long
 @app.route('/evaluate', methods=['POST'])
 def evaluate():
     try:
-        model_type = request.get_json().get('model_type').lower()
+        print(f"Request: {request.get_json()}")
+        model_type = request.get_json().get('model').lower()
 
         if model_type not in model_data:
             raise ValueError(f"No model found for type: {model_type}")
@@ -215,35 +216,108 @@ def evaluate():
 
         print(f"Evaluating Model type: {model_type}, data: {data_path}")
 
-        request_data = request.get_json()
-        selected_features = request_data.get('selected_features')
-        if not selected_features:
-            raise ValueError("No features selected")
-
-        filtered_data = data[selected_features]
-        if filtered_data.empty:
-            raise ValueError("No data available for selected features")
-
         target_column = 'Real Oil Prices' if 'Real Oil Prices' in data.columns else 'Cushing, OK WTI Spot Price FOB (Dollars per Barrel)'
         if target_column not in data.columns:
             raise ValueError(f"'{target_column}' not found in DataFrame")
 
-        # Debugging: Print feature names
-        print("Features used for prediction:", selected_features)
-        print("Features used in training:", data.columns.tolist())
+        # Check if the model is a time series model
+        if model_data[model_type]['is_time_series']:
+            # drop the 'Unnamed: 0' column
+            if 'Unnamed: 0' in data.columns:
+                data = data.drop(columns=['Unnamed: 0'])
 
-        true_values = data[target_column]
-        prediction = model.predict(filtered_data)
+            print("Time Series Model Detected")
 
-        # Compute metrics
-        mse, mae, rmse, mape, r2 = calculate_metrics(true_values, prediction)
+            # For time series model, use only the target column
+            # Prepare the data for prediction
+            print(f"Target column: {target_column}")
+            time_series_data = data[target_column]
+            print(f"Time Series Data: {time_series_data}")
 
-        if model_type == 'random_forest':
+            # Determine the number of steps to forecast
+            # This could be the length of a test set, or a specified future period
+            num_steps = 30  # 30 days
+
+            # Make predictions using get_forecast
+            forecast = model.get_forecast(steps=num_steps)
+            print(f"Forecast: {forecast}")
+
+            forecast_mean = forecast.predicted_mean
+            print(f"Forecast Mean: {forecast_mean}")
+
+            prediction = forecast_mean
+            print(f"Prediction: {prediction}")
+
+            # Calculate metrics - can't give metrics for the future
+            mse, mae, rmse, mape, r2 = [None] * 5
+            print(f"Metrics: mse [Time Series]={mse}, mae={mae}, rmse={rmse}, mape={mape}, r2={r2}")
+
+            # Generate and save the future forecast plot
+            plt.figure(figsize=(12, 6))
+            historical_data = pd.read_csv('data/Combined_Log_Clean.csv')[target_column]
+            future_forecast_mean = forecast.predicted_mean
+            future_conf_int = forecast.conf_int()  # Assuming this method gives you confidence intervals
+
+            plt.plot(historical_data.index, historical_data, label='Historical')
+            plt.plot(np.arange(len(historical_data), len(historical_data) + len(future_forecast_mean)),
+                     future_forecast_mean, color='green', label='Future Forecast')
+            plt.fill_between(np.arange(len(historical_data), len(historical_data) + len(future_forecast_mean)),
+                             future_conf_int.iloc[:, 0], future_conf_int.iloc[:, 1], color='lightgreen', alpha=0.5,
+                             label='95% Confidence Interval')
+            plt.xlabel('Time')
+            plt.ylabel('Real Oil Prices')
+            plt.title('Future Forecast with Confidence Intervals')
+            plt.legend()
+            future_forecast_plot_file = 'static/plots/future-forecast-plot.png'
+            plt.savefig(future_forecast_plot_file)
+            plt.close()
+
+            result = {
+                'future_forecast_plot': url_for('static', filename='plots/future-forecast-plot.png'),
+                'prediction': prediction.tolist(),  # Keeping the raw prediction values in case they are needed,
+            }
+        else:
+            request_data = request.get_json()
+            selected_features = request_data.get('selected_features')
+            if not selected_features:
+                raise ValueError("No features selected")
+
+            filtered_data = data[selected_features]
+            if filtered_data.empty:
+                raise ValueError("No data available for selected features")
+
+            # Debugging: Print feature names
+            print("Features used for prediction:", selected_features)
+            print("Features used in training:", data.columns.tolist())
+
+            print(f"Target column: {target_column}")
+            print(f"Target column values: {data[target_column]}")
+            print(f"Target column values type: {type(data[target_column])}")
+            print(f"Filtered data: {filtered_data}")
+            print(f"Filtered data type: {type(filtered_data)}")
+
+            print("Before prediction")
+            true_values = data[target_column]
+            print("True Values:", true_values)
+
+            # Convert to numpy array
+            true_values_array = true_values.values  # or true_values.to_numpy()
+            print("True Values Array:", true_values_array)
+
+            prediction = model.predict(filtered_data)
+            print("Prediction:", prediction)
+
+            print(f"Calculating metrics for model type: {model_type}")
+            # Compute metrics
+            mse, mae, rmse, mape, r2 = calculate_metrics(true_values_array, prediction)
+            print(f"Metrics: mse={mse}, mae={mae}, rmse={rmse}, mape={mape}, r2={r2}")
+
             # Plotting actual vs predicted
             plt.figure(figsize=(10, 6))
             plt.plot(prediction, label='Predictions', color='blue')
             plt.plot(true_values.values, label='Actual', color='red')
-            plt.plot([0, len(true_values)], [np.mean(prediction), np.mean(prediction)], '--', lw=2, color='green', label='Mean Prediction')
+            plt.plot([0, len(true_values)], [np.mean(prediction), np.mean(prediction)], '--', lw=2, color='green',
+                     label='Mean Prediction')
             plt.legend(loc='upper left')
             plt.xlabel('Index')
             plt.ylabel('Value')
@@ -264,33 +338,29 @@ def evaluate():
             plt.savefig(feature_importance_plot_file)
             plt.close()
 
-
-        result = {
-            'mse': mse,
-            'mae': mae,
-            'rmse': rmse,
-            'mape': mape,
-            'r2': r2,
-            'actual_vs_predicted_plot': url_for('static', filename='plots/actual-vs-predicted-plot.png'),
-            'feature_importance_plot': url_for('static', filename='plots/feature-importance-plot.png'),
-            'prediction': prediction.tolist(),  # Keeping the raw prediction values in case they are needed,
-        }
-
+            result = {
+                'mse': mse,
+                'mae': mae,
+                'rmse': rmse,
+                'mape': mape,
+                'r2': r2,
+                'actual_vs_predicted_plot': url_for('static', filename='plots/actual-vs-predicted-plot.png'),
+                'feature_importance_plot': url_for('static', filename='plots/feature-importance-plot.png'),
+                'prediction': prediction.tolist(),  # Keeping the raw prediction values in case they are needed,
+            }
 
     except ValueError as e:
         print(f'Value error: {e}')
         return jsonify({'error': str(e)}), 400
 
-
     except Exception as e:
-        print('Error while predicting:', str(e))
+        print(f'Error while predicting: {e}')
         return jsonify({'error': 'Error while predicting'}), 400
 
     return jsonify(result)
 
 
 def get_features_names(model_type):
-    model = load_model(model_type)
     data_path = get_model_data(model_type)
     data = pd.read_csv(data_path)  # Load the data into a DataFrame
 
@@ -300,4 +370,3 @@ def get_features_names(model_type):
 
 if __name__ == '__main__':
     app.run(debug=True)
-
