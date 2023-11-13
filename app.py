@@ -50,7 +50,6 @@ def index():
     return render_template('index.html')
 
 
-# TODO: THIS NEEDS TO BE DYANMICALLY LOADED BASED ON THE MODEL SELECTED
 # Feature Names Endpoint to get feature names for chosen model
 @app.route('/features', methods=['GET'])
 def get_features():
@@ -61,6 +60,7 @@ def get_features():
 
     data = load_data_for_model(model_type)  # Load the data into a DataFrame
 
+    # TODO: Remove this print statement
     print(f"Features for model type: {model_type}, data: {data.columns.tolist()}")
 
     # Fetch feature names from the model-specific data
@@ -273,6 +273,11 @@ def evaluate():
             plt.close()
 
             result = {
+                'mse': mse,
+                'mae': mae,
+                'rmse': rmse,
+                'mape': mape,
+                'r2': r2,
                 'future_forecast_plot': url_for('static', filename='plots/future-forecast-plot.png'),
                 'prediction': prediction.tolist(),  # Keeping the raw prediction values in case they are needed,
             }

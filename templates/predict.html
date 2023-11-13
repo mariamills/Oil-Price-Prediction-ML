@@ -86,13 +86,13 @@
                             name="model-type"
                             class="mt-2 block w-full rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
                         >
-                            <option value="naive_forecast">Naive Forecast</option>
-                            <option value="random_forest">Random Forest</option>
-                            <option value="xgboost">XGBoost [Regression]</option>
-                            <option value="polynomial_Regression">Polynomial Regression</option>
+                            <option hidden value="naive_forecast">Naive Forecast</option>
+                            <option value="random_forest" selected="random_forest">Random Forest</option>
+                            <option hidden value="xgboost">XGBoost [Regression]</option>
+                            <option hidden value="polynomial_Regression">Polynomial Regression</option>
                             <option value="arima">ARIMA</option>
-                            <option value="prophet">Prophet</option>
-                            <option value="xgboost_time_series">XGBoost [Time Series]</option>
+                            <option hidden value="prophet">Prophet</option>
+                            <option hidden value="xgboost_time_series">XGBoost [Time Series]</option>
                         </select>
 
                    <!--     Magic button    -->
@@ -101,7 +101,7 @@
 
                     <!-- Predict -->
                     <div class="">
-                        <div class="" id="prediction-result">
+                        <div class="hidden" id="prediction-result">
                             <p id="mse"></p>
                             <p id="mae"></p>
                             <p id="rmse"></p>

@@ -218,6 +218,12 @@ function updateUIWithMetrics(data) {
     // Hide loading indicator and show the plots
     // document.getElementById('loading').classList.add('hidden');
 
+    if(data.mse !== null && data.mse !== undefined) {
+        document.getElementById('prediction-result').classList.remove('hidden');
+    } else {
+        document.getElementById('prediction-result').classList.add('hidden');
+    }
+
     if(data.actual_vs_predicted_plot !== '') {
         document.getElementById('actual-vs-predicted').classList.remove('hidden');
     } else {
