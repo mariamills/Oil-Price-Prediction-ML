@@ -87,16 +87,6 @@ def get_data():
     return jsonify(filtered_df.to_dict(orient='list'))
 
 
-# Fetch number of days to forecast
-@app.route('/forecast', methods=['POST'])
-def get_forecast_days():
-    global num_steps
-    num_steps = request.json['days']
-    # convert to int
-    num_steps = int(num_steps)
-    return jsonify(num_steps)
-
-
 # Fetch Data and Plot
 @app.route('/plot', methods=['POST'])
 def plot():
@@ -176,6 +166,17 @@ def plot():
 
     return jsonify({'plot_url': 'data:image/png;base64,{}'.format(plot_url),
                     'legend_url': 'data:image/png;base64,{}'.format(legend_url)})
+
+
+
+# Fetch number of days to forecast
+@app.route('/forecast', methods=['POST'])
+def get_forecast_days():
+    global num_steps
+    num_steps = request.json['days']
+    # convert to int
+    num_steps = int(num_steps)
+    return jsonify(num_steps)
 
 
 @app.route('/data_explorer')

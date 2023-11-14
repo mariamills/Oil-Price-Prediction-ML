@@ -10,6 +10,7 @@ const modelType = document.getElementById('model-type')
 const dataDropdownSelection = document.getElementById('dataset')
 const daysToForecast = document.getElementById('days-to-forecast')
 
+
 // Listen for click events on the mobile menu button
 if (mobileMenuButton) {
     mobileMenuButton.addEventListener("click", function () {
@@ -22,7 +23,6 @@ if (mobileMenuButton) {
     });
 }
 
-
 // Get selected features
 function getSelectedFeatures() {
     const checkboxes = document.querySelectorAll('input[name="feature"]:checked');
@@ -33,7 +33,6 @@ function getSelectedFeatures() {
     console.log(`Selected features ${selected}`);  // Debugging line
     return selected;
 }
-
 
 // Fetch features and create checkboxes
 function createFeatureCheckboxes(features) {
@@ -85,7 +84,6 @@ function createFeatureCheckboxes(features) {
     console.log('Checkboxes created for features:', features);  // Debugging line
 }
 
-
 // Initial fetch of features when the page loads
 fetch('/features', {
     method: 'GET'
@@ -100,8 +98,6 @@ fetch('/features', {
     createFeatureCheckboxes(features);  // Call the function here
 })
 .catch(error => console.error('Error:', error));
-
-
 
 // When a new model is selected, fetch the new model's features
 if (modelType) {
