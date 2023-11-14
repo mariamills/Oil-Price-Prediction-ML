@@ -8,6 +8,7 @@ const checkboxContainer = document.getElementById("checkbox-container");
 const plotType = document.getElementById("plot-type");
 const modelType = document.getElementById('model-type')
 const dataDropdownSelection = document.getElementById('dataset')
+const daysToForecast = document.getElementById('days-to-forecast')
 
 // Listen for click events on the mobile menu button
 if (mobileMenuButton) {
@@ -107,6 +108,14 @@ if (modelType) {
     modelType.addEventListener('change', () => {
         const model = modelType.value;
 
+        if (modelType.value === 'prophet' || modelType.value === 'arima') {
+            document.getElementById('days-to-forecast').classList.remove('hidden');
+            document.getElementById('days-to-forecast-label').classList.remove('hidden');
+        } else {
+            document.getElementById('days-to-forecast').classList.add('hidden');
+            document.getElementById('days-to-forecast-label').classList.add('hidden');
+        }
+
         // Send GET request to fetch features for the selected model
         fetch(`/features?model=${model}`, )
         .then(response => {
@@ -144,10 +153,31 @@ if (dataDropdownSelection){
     });
 }
 
+// Days to predict
+if (daysToForecast) {
+    daysToForecast.addEventListener('change', () => {
+        const days = daysToForecast.value;
+        console.log(`Days to predict: ${days}`);
+        fetch('/forecast', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({days: days}),
+        })
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            } else {
+                throw new Error("Failed to fetch features");
+            }
+        })
+    });
+}
+
 // Plot type selection
 if (plotType) {
     plotType.addEventListener('change', () => {
-        console.log("Plot type changed");  // Debugging line
         const selected_features = getSelectedFeatures();
         fetch('/plot', {
             method: 'POST',

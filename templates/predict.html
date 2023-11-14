@@ -95,14 +95,14 @@
                             <option hidden value="xgboost_time_series">XGBoost [Time Series]</option>
                         </select>
 
-                        <label for="days-to-predict">Days to Predict</label>
+                        <label class="hidden" for="days-to-forecast" id="days-to-forecast-label">Days to Forecast</label>
                         <input
                             type="number"
-                            id="days-to-predict"
+                            id="days-to-forecast"
                             max="365"
                             min="1"
-                            name="days-to-predict"
-                            class="mt-2 block w-full rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                            name="days-to-forecast"
+                            class="hidden mt-2 block w-full rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
                             value="30"
                         >
 

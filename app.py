@@ -12,6 +12,9 @@ app = Flask(__name__)
 
 NUM_FEATURES = 10  # Number of features to show in feature importance plot
 
+# Determine the number of steps to forecast
+num_steps = 30  # 30 days
+
 # Load models and their corresponding datasets into memory on app startup
 model_data = {
     'random_forest': {
@@ -65,9 +68,6 @@ def get_features():
 
     data = load_data_for_model(model_type)  # Load the data into a DataFrame
 
-    # TODO: Remove this print statement
-    print(f"Features for model type: {model_type}, data: {data.columns.tolist()}")
-
     # Fetch feature names from the model-specific data
     feature_names = data.columns.tolist()[0:-1]  # remove the last column (target)
     return jsonify(feature_names)
@@ -85,6 +85,16 @@ def get_data():
 
     filtered_df = df[selected_features]
     return jsonify(filtered_df.to_dict(orient='list'))
+
+
+# Fetch number of days to forecast
+@app.route('/forecast', methods=['POST'])
+def get_forecast_days():
+    global num_steps
+    num_steps = request.json['days']
+    # convert to int
+    num_steps = int(num_steps)
+    return jsonify(num_steps)
 
 
 # Fetch Data and Plot
@@ -239,10 +249,6 @@ def evaluate():
             print(f"Target column: {target_column}")
             time_series_data = data[target_column]
             print(f"Time Series Data: {time_series_data}")
-
-            # Determine the number of steps to forecast
-            # This could be the length of a test set, or a specified future period
-            num_steps = 30  # 30 days
 
             if model_type == 'arima':
                 # Make predictions using get_forecast
