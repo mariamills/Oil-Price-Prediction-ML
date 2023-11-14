@@ -78,8 +78,8 @@
                       <p><strong>This page is still a WIP!</strong></p>
                   </div>
 
-                   <!-- Container for the models selection -->
-                    <div class="mt-10 flex items-center justify-center gap-x-6">
+                   <!-- Container for the models selection and number of days to predict -->
+                    <div class="mt-10 flex items-center justify-center gap-x-6 flex-col">
                         <label for="model-type">Model Selection</label>
                         <select
                             id="model-type"
@@ -91,12 +91,25 @@
                             <option hidden value="xgboost">XGBoost [Regression]</option>
                             <option hidden value="polynomial_Regression">Polynomial Regression</option>
                             <option value="arima">ARIMA</option>
-                            <option hidden value="prophet">Prophet</option>
+                            <option value="prophet">Prophet</option>
                             <option hidden value="xgboost_time_series">XGBoost [Time Series]</option>
                         </select>
 
-                   <!--     Magic button    -->
+                        <label for="days-to-predict">Days to Predict</label>
+                        <input
+                            type="number"
+                            id="days-to-predict"
+                            max="365"
+                            min="1"
+                            name="days-to-predict"
+                            class="mt-2 block w-full rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                            value="30"
+                        >
+
+                        <div class="mt-4">
+                            <!--     Magic button    -->
                         <button onclick="predict()" class="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Predict</button>
+                        </div>
                     </div>
 
                     <!-- Predict -->
